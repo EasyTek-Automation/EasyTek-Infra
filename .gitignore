@@ -1,0 +1,13 @@
+# Ignorar arquivos de ambiente locais. Apenas os .env.example devem ser versionados.
+.env
+*.env
+
+# Ignorar dados gerados pelo Nginx Proxy Manager
+environments/*/nginx/data/
+environments/*/nginx/letsencrypt/
+
+# Ignorar dados gerados pelo Portainer
+environments/*/portainer/
+
+# Ignorar dados gerados pelo Node-RED
+node-red-config/
