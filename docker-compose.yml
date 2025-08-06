@@ -23,6 +23,7 @@ services:
     container_name: node-red
     image: ghcr.io/easytek-automation/easytek-data/node-red:${TAG:-latest}
     restart: unless-stopped
+    user: root  # <--- ADICIONE ESTA LINHA
     volumes:
       - node_red_modules:/data/node_modules
       - ./node-red-config:/data
