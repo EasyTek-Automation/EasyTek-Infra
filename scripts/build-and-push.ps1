@@ -25,7 +25,7 @@ $buildComposeContent | Out-File -FilePath "docker-compose.build.yml" -Encoding u
 
 try {
     # Constrói as imagens usando o arquivo de build
-    docker compose -f "docker-compose.build.yml" build
+    docker compose -f "docker-compose.build.yml" build --builder multiarch-builder --platform linux/amd64,linux/arm64
 
     Write-Host "INFO: Enviando imagens para ghcr.io..."
     # Envia as imagens para o registro
