@@ -3,61 +3,53 @@ param (
     [Parameter(Mandatory=$true)]
     [ValidateSet('local', 'dev', 'prod')]
     [string]$env,
-
-    [Parameter(Mandatory=$false)]
     [string]$tag = "latest"
 )
 
-# Define os caminhos para os arquivos de configuração
+# --- Validação ---
 $envFile = ".\environments\$env\.env"
 $overrideFile = ".\environments\$env\docker-compose.override.yml"
-$githubUser = $env:GITHUB_USER # Pega o usuário do GH das variáveis de ambiente
-$githubPat = $env:GITHUB_PAT   # Pega o PAT do GH das variáveis de ambiente
 
-# --- Validação ---
 Write-Host "INFO: Validando ambiente '$env'..."
 if (-not (Test-Path $envFile)) {
     Write-Error "ERRO: Arquivo de ambiente '$envFile' não encontrado."
     exit 1
 }
-# ... (outras validações podem continuar aqui)
+if ($env -ne 'local' -and (-not $env:GITHUB_USER -or -not $env:GITHUB_PAT)) {
+    Write-Error "ERRO: Para ambientes 'dev' ou 'prod', as variáveis GITHUB_USER e GITHUB_PAT devem ser definidas."
+    exit 1
+}
 
 # --- Execução ---
 try {
-    # Passo 1: Autenticar no GHCR.IO nos ambientes remotos
-    if ($env -ne 'local') {
-        if (-not $githubUser -or -not $githubPat) {
-            throw "ERRO: Para ambientes 'dev' ou 'prod', as variáveis de ambiente GITHUB_USER e GITHUB_PAT devem ser definidas."
-        }
-        Write-Host "INFO: Autenticando no ghcr.io..."
-        $githubPat | docker login ghcr.io -u $githubUser --password-stdin
-        if ($LASTEXITCODE -ne 0) {
-            throw "Falha na autenticação com o ghcr.io."
-        }
-    }
-
-    # Passo 2: Subir o proxy e a rede.
+    # Passo 1: Subir o proxy e a rede.
     Write-Host "INFO: Iniciando a infraestrutura de proxy para o ambiente '$env'..."
-    docker compose --env-file $envFile -f proxy-compose.yml up -d --wait
-    if ($LASTEXITCODE -ne 0) {
-        throw "Falha ao iniciar o proxy-compose."
+    docker compose --env-file $envFile -f "proxy-compose.yml" up -d --wait
+    if ($LASTEXITCODE -ne 0) { throw "Falha ao iniciar o proxy-compose." }
+
+    # Passo 2: Lógica diferente para local vs. remoto
+    if ($env -eq 'local') {
+        # PARA LOCAL: Usar o código-fonte local para construir as imagens
+        Write-Host "INFO: Construindo e iniciando a aplicação principal para o ambiente local..."
+        docker compose --env-file $envFile -f "docker-compose.yml" -f $overrideFile up -d --build
+    }
+    else {
+        # PARA DEV/PROD: Baixar do registro
+        Write-Host "INFO: Autenticando no ghcr.io..."
+        $env:GITHUB_PAT | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
+        if ($LASTEXITCODE -ne 0) { throw "Falha na autenticação com o ghcr.io." }
+
+        Write-Host "INFO: Baixando (pull) as imagens da aplicação com a tag '$tag'..."
+        # Precisamos definir a variável TAG para que o compose a use
+        $env:TAG = $tag
+        docker compose --env-file $envFile -f "docker-compose.yml" -f $overrideFile pull
+        if ($LASTEXITCODE -ne 0) { throw "Falha ao baixar as imagens." }
+
+        Write-Host "INFO: Iniciando a aplicação principal para o ambiente '$env'..."
+        docker compose --env-file $envFile -f "docker-compose.yml" -f $overrideFile up -d
     }
 
-    # Passo 3: Baixar as imagens mais recentes da aplicação
-    Write-Host "INFO: Baixando (pull) as imagens da aplicação com a tag '$tag'..."
-    # Define a tag para o compose usar
-    $env:TAG = $tag
-    docker compose --env-file $envFile -f docker-compose.yml -f $overrideFile pull
-    if ($LASTEXITCODE -ne 0) {
-        throw "Falha ao baixar as imagens do ghcr.io."
-    }
-
-    # Passo 4: Subir a aplicação principal (sem --build)
-    Write-Host "INFO: Iniciando a aplicação principal para o ambiente '$env'..."
-    docker compose --env-file $envFile -f docker-compose.yml -f $overrideFile up -d
-    if ($LASTEXITCODE -ne 0) {
-        throw "Falha ao iniciar o docker-compose principal."
-    }
+    if ($LASTEXITCODE -ne 0) { throw "Falha ao iniciar o docker-compose principal." }
 
     Write-Host "SUCESSO: Ambiente '$env' iniciado com a tag '$tag'."
 

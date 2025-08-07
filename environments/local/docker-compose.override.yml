@@ -1,6 +1,24 @@
-
-
+# easytek-infra/environments/local/docker-compose.override.yml
 services:
+  webapp:
+    build:
+      context: ${CODE_PATH}/webapp
+    volumes:
+      - ${CODE_PATH}/webapp:/app
+
+  event-gateway:
+    build:
+      context: ${CODE_PATH}/event-gateway
+    volumes:
+      - ${CODE_PATH}/event-gateway:/app
+
+  node-red:
+    build:
+      context: ${CODE_PATH}/node-red
+    # MUDANÇA AQUI: O volume agora aponta para a pasta do código-fonte.
+    volumes:
+      - ${CODE_PATH}/node-red:/data
+
   database:
     image: mongo:latest
     ports:
