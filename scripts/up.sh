@@ -1,15 +1,12 @@
 #!/bin/bash
-set -e
+set -e # Sai imediatamente se um comando falhar
 
-# --- Validação ---
-if [ -z "$1" ] || ! [[ "$1" =~ ^(local|dev|prod)$ ]]; then
-  echo "ERRO: Forneça um ambiente válido (local, dev, prod) como primeiro argumento."
-  echo "Uso: ./scripts/up.sh <ambiente>"
-  exit 1
-fi
+# Uso: ./up.sh <ambiente> [tag]
+# Exemplo: ./up.sh dev 0.1.0
 
 ENV=$1
-TAG=${2:-latest} # Usa o segundo argumento como tag, ou 'latest' como padrão
+TAG=${2:-latest} # Usa o segundo argumento, ou 'latest' se não for fornecido
+
 ENV_FILE="./environments/$ENV/.env"
 OVERRIDE_FILE="./environments/$ENV/docker-compose.override.yml"
 
@@ -19,25 +16,29 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-# --- Autenticação (A PARTE QUE FALTAVA) ---
-if [[ "$ENV" != "local" ]]; then
-  if [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_PAT" ]; then
+# Carrega as variáveis de ambiente para o script
+export $(grep -v '^#' $ENV_FILE | xargs)
+
+if [ "$ENV" != "local" ] && { [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_PAT" ]; }; then
     echo "ERRO: Para ambientes 'dev' ou 'prod', as variáveis GITHUB_USER e GITHUB_PAT devem ser definidas."
     exit 1
-  fi
-  echo "INFO: Autenticando no ghcr.io..."
-  echo "$GITHUB_PAT" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
 fi
 
-# --- Execução ---
 echo "INFO: Iniciando a infraestrutura de proxy para o ambiente '$ENV'..."
-docker compose --env-file "$ENV_FILE" -f proxy-compose.yml up -d --wait
+docker compose --env-file $ENV_FILE -f "proxy-compose.yml" up -d --wait
 
-echo "INFO: Baixando (pull) as imagens da aplicação com a tag '$TAG'..."
-export TAG # Exporta a variável TAG para que o docker compose a veja
-docker compose --env-file "$ENV_FILE" -f docker-compose.yml -f "$OVERRIDE_FILE" pull
+if [ "$ENV" == "local" ]; then
+    echo "INFO: Construindo e iniciando a aplicação para o ambiente local..."
+    docker compose --env-file $ENV_FILE -f "docker-compose.yml" -f $OVERRIDE_FILE up -d --build
+else
+    echo "INFO: Autenticando no ghcr.io..."
+    echo "$GITHUB_PAT" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
 
-echo "INFO: Iniciando a aplicação principal para o ambiente '$ENV'..."
-docker compose --env-file "$ENV_FILE" -f docker-compose.yml -f "$OVERRIDE_FILE" up -d
+    echo "INFO: Baixando (pull) as imagens com a tag '$TAG'..."
+    TAG=$TAG docker compose --env-file $ENV_FILE -f "docker-compose.yml" -f $OVERRIDE_FILE pull
+
+    echo "INFO: Iniciando a aplicação principal para o ambiente '$ENV'..."
+    TAG=$TAG docker compose --env-file $ENV_FILE -f "docker-compose.yml" -f $OVERRIDE_FILE up -d
+fi
 
 echo "SUCESSO: Ambiente '$ENV' iniciado com a tag '$TAG'."
