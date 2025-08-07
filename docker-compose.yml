@@ -26,7 +26,7 @@ services:
     user: root  # <--- VERIFIQUE SE ESTA LINHA EXISTE
     volumes:
       - node_red_modules:/data/node_modules
-      - ./node-red-config:/data
+      - ${NODE_RED_DATA_PATH}:/data
     networks:
       - easytek-net
 
