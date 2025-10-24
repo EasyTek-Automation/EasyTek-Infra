@@ -1,40 +1,68 @@
+name: amg-infra
 services:
-  webapp:
-    # A diretiva 'build' foi removida.
-    # A imagem agora aponta para o registro da sua organização.
-    image: ghcr.io/easytek-automation/easytek-data/webapp:${TAG:-latest}
-    ports:
-      - "8050:8050"
-    env_file:
-      - .env.common
-    networks:
-      - easytek-net
-
   event-gateway:
-    image: ghcr.io/easytek-automation/easytek-data/event-gateway:${TAG:-latest}
-    ports:
-      - "5001:5001"
-    env_file:
-      - .env.common
+    environment:
+      COLLECTION_NAME: DecapadoPerformance
+      DB_NAME: Cluster-EasyTek
+      ENERGY_COLLECTION: DecapadoEnergia
+      GATEWAY_URL: http://event-gateway:5001
+      MONGO_URI: mongodb+srv://rgustavo32s:Eletrica14@cluster-easytek.eljwyem.mongodb.net/?retryWrites=true&w=majority&appName=Cluster-EasyTek
+      MQTT_BROKER_ADDRESS: d97688cddf164314b10b548c2d44208b.s1.eu.hivemq.cloud
+      MQTT_BROKER_PORT: "8883"
+      MQTT_PASSWORD: Eletrica@14
+      MQTT_USERNAME: rgustavo32
+      OTHER_COLLECTION_NAME: DecapadoFalhas
+      SECRET_KEY: "572325043802836728583887489361"
+      TEMP_COLLECTION: DecapadoTemp
+    image: ghcr.io/easytek-automation/easytek-data/event-gateway:latest
     networks:
-      - easytek-net
-
+      easytek-net: null
+    ports:
+      - mode: ingress
+        target: 5001
+        published: "5001"
+        protocol: tcp
   node-red:
     container_name: node-red
-    image: ghcr.io/easytek-automation/easytek-data/node-red:${TAG:-latest}
-    restart: unless-stopped
-    user: root  # <--- VERIFIQUE SE ESTA LINHA EXISTE
-    volumes:
-      - node_red_modules:/data/node_modules
-      #- ${NODE_RED_DATA_PATH}:/data
+    image: ghcr.io/easytek-automation/easytek-data/node-red:latest
     networks:
-      - easytek-net
-
-volumes:
-  mongo-data:
-  portainer_data:
-  node_red_modules:
-
+      easytek-net: null
+    restart: unless-stopped
+    user: root
+    volumes:
+      - type: volume
+        source: node_red_modules
+        target: /data/node_modules
+        volume: {}
+  webapp:
+    environment:
+      COLLECTION_NAME: DecapadoPerformance
+      DB_NAME: Cluster-EasyTek
+      ENERGY_COLLECTION: DecapadoEnergia
+      GATEWAY_URL: http://event-gateway:5001
+      MONGO_URI: mongodb+srv://rgustavo32s:Eletrica14@cluster-easytek.eljwyem.mongodb.net/?retryWrites=true&w=majority&appName=Cluster-EasyTek
+      MQTT_BROKER_ADDRESS: d97688cddf164314b10b548c2d44208b.s1.eu.hivemq.cloud
+      MQTT_BROKER_PORT: "8883"
+      MQTT_PASSWORD: Eletrica@14
+      MQTT_USERNAME: rgustavo32
+      OTHER_COLLECTION_NAME: DecapadoFalhas
+      SECRET_KEY: "572325043802836728583887489361"
+      TEMP_COLLECTION: DecapadoTemp
+    image: ghcr.io/easytek-automation/easytek-data/webapp:latest
+    networks:
+      easytek-net: null
+    ports:
+      - mode: ingress
+        target: 8050
+        published: "8050"
+        protocol: tcp
 networks:
   easytek-net:
+    name: easytek-net
     external: true
+volumes:
+  node_red_modules:
+    name: amg-infra_node_red_modules
+  mongo-data:
+    name: mongo-data
+    driver: local

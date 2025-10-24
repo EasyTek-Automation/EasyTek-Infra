@@ -11,3 +11,17 @@ environments/*/portainer/
 
 # Ignorar dados gerados pelo Node-RED
 node-red-config/
+
+# arquivos com credenciais
+.env
+.env.local
+.env.common
+environments/*/.env
+
+# diretórios externos
+AMG-Data/
+Docker-Data/
+
+# volumes do docker
+**/node_modules
+**/__pycache__
