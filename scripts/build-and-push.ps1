@@ -5,11 +5,39 @@ param (
     [string]$tag
 )
 
+# Função para carregar variáveis do arquivo .env
+function Load-EnvFile {
+    param([string]$EnvFilePath)
+
+    if (Test-Path $EnvFilePath) {
+        Write-Host "INFO: Carregando variáveis do arquivo .env..."
+        Get-Content $EnvFilePath | ForEach-Object {
+            $line = $_.Trim()
+            # Ignora linhas vazias e comentários
+            if ($line -and -not $line.StartsWith('#')) {
+                $parts = $line -split '=', 2
+                if ($parts.Count -eq 2) {
+                    $key = $parts[0].Trim()
+                    $value = $parts[1].Trim()
+                    # Remove aspas se existirem
+                    $value = $value -replace '^["'']|["'']$', ''
+                    [System.Environment]::SetEnvironmentVariable($key, $value, 'Process')
+                }
+            }
+        }
+    }
+}
+
+# Carrega o arquivo .env da raiz do projeto (se existir)
+$rootPath = Split-Path -Parent $PSScriptRoot
+$envFile = Join-Path $rootPath ".env"
+Load-EnvFile -EnvFilePath $envFile
+
 Write-Host "INFO: Iniciando build multi-arquitetura para a versão '$tag'..."
 
 # Validação de pré-requisitos
 if (-not $env:GITHUB_USER -or -not $env:GITHUB_PAT) {
-    Write-Error "ERRO: As variáveis de ambiente GITHUB_USER e GITHUB_PAT devem ser definidas."
+    Write-Error "ERRO: As variáveis de ambiente GITHUB_USER e GITHUB_PAT devem ser definidas no arquivo .env ou como variáveis de ambiente do sistema."
     exit 1
 }
 
