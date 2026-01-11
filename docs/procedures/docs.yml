@@ -1,0 +1,78 @@
+title: DocEasyTek
+icon: bi-book
+index: index.md
+
+sections:
+  - name: amg
+    label: AMG
+    icon: bi-folder
+    expanded: false
+    sections:
+      - name: ihm
+        label: IHM
+        icon: bi-folder
+        expanded: false
+        sections:
+          - name: rockwell
+            label: Rockwell
+            icon: bi-folder
+            expanded: false
+            files:
+              - path: AMG/IHM/Rockwell/comunicacaoIHM_Rockwell.md
+                title: Comunicação IHM Rockwell
+
+      - name: lct08
+        label: LCT08
+        icon: bi-folder
+        expanded: false
+        sections:
+          - name: calibracao
+            label: Calibração
+            icon: bi-folder
+            expanded: false
+            files:
+              - path: AMG/LCT08/Calibracao/FolgaFaca.md
+                title: Calibração da Folga da Faca
+              - path: AMG/LCT08/Calibracao/FolgaFaca02.md
+                title: Calibração da Folga da Faca - Versão 2  
+
+      - name: lct16
+        label: LCT16
+        icon: bi-folder
+        expanded: false
+        sections:
+          - name: calibracao
+            label: Calibração
+            icon: bi-folder
+            expanded: false
+            files:
+              - path: AMG/LCT16/Calibracao/TrocaMotor.md
+                title: Troca de Motor
+
+      - name: prensa_01
+        label: Prensa 01
+        icon: bi-folder
+        expanded: false
+        sections:
+          - name: ihm
+            label: IHM
+            icon: bi-folder
+            expanded: false
+            files:
+              - path: AMG/Prensa_01/IHM/backup_proSave.md
+                title: 'Backup da Aplicação: Simatic ProSave'
+
+      - name: revisoes
+        label: Revisões
+        icon: bi-folder
+        expanded: false
+        sections:
+          - name: lct08
+            label: LCT08
+            icon: bi-folder
+            expanded: false
+            files:
+              - path: AMG/Revisoes/LCT08/LCT08_Rev001.md
+                title: Rev001
+
+ 

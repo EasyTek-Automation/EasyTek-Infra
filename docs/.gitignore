@@ -1,0 +1,14 @@
+# Ignorar conteúdo de documentação (gerenciado como volume externo)
+# Mantenha apenas a estrutura de pastas versionada
+
+# Ignorar todos os arquivos markdown
+*.md
+
+# Ignorar subpastas com conteúdo
+procedures/*/
+
+# MANTER apenas:
+# - README.md (instruções)
+# - procedures/.gitkeep (manter pasta vazia no git)
+!README.md
+!procedures/.gitkeep

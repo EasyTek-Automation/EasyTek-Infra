@@ -19,7 +19,7 @@ $env:GITHUB_PAT | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
 if ($LASTEXITCODE -ne 0) { throw "Falha na autenticação com o ghcr.io." }
 
 # Define o caminho RELATIVO para a pasta de código a partir da raiz de 'easytek-infra'
-$CodePath = "..\EasyTek-Data"
+$CodePath = "E:\Projetos Python\AMG_Data"
 
 # Lista de serviços a serem construídos
 $services = @("webapp", "event-gateway", "node-red")

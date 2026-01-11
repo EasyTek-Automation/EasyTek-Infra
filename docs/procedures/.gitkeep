@@ -1,0 +1,3 @@
+# Este arquivo mantém a pasta procedures/ versionada no git
+# O conteúdo real (arquivos .md) é ignorado pelo .gitignore
+# e gerenciado como volume externo no Docker

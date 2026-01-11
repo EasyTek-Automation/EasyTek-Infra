@@ -1,5 +1,26 @@
 name: amg-infra
 services:
+<<<<<<< HEAD
+=======
+  webapp:
+    # A diretiva 'build' foi removida.
+    # A imagem agora aponta para o registro da sua organização.
+    image: ghcr.io/easytek-automation/easytek-data/webapp:${TAG:-latest}
+    ports:
+      - "8050:8050"
+    env_file:
+      - .env.common
+    environment:
+      # Caminho do volume de documentação dentro do container
+      - DOCS_PROCEDURES_PATH=/app/docs/procedures
+    volumes:
+      # Volume externo para documentação (editável sem rebuild)
+      # Host: ./docs/procedures -> Container: /app/docs/procedures
+      - ./docs/procedures:/app/docs/procedures:ro
+    networks:
+      - easytek-net
+
+>>>>>>> 769733d (fix: New volume to procedures feature)
   event-gateway:
     environment:
       COLLECTION_NAME: DecapadoPerformance
