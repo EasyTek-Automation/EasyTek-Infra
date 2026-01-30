@@ -7,8 +7,9 @@ param (
 )
 
 # --- Validação ---
-$envFile = ".\environments\$env\.env"
-$overrideFile = ".\environments\$env\docker-compose.override.yml"
+$envFile = ".\environments\${env}\.env"
+$overrideFile = ".\environments\${env}\docker-compose.override.yml"
+Write-Host "DEBUG: Usando env-file em '$envFile'"
 
 Write-Host "INFO: Validando ambiente '$env'..."
 if (-not (Test-Path $envFile)) {
@@ -19,6 +20,8 @@ if ($env -ne 'local' -and (-not $env:GITHUB_USER -or -not $env:GITHUB_PAT)) {
     Write-Error "ERRO: Para ambientes 'dev' ou 'prod', as variáveis GITHUB_USER e GITHUB_PAT devem ser definidas."
     exit 1
 }
+$env:TAG = $tag
+$env:ENV = $env
 
 # --- Execução ---
 try {
