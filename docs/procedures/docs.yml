@@ -61,6 +61,8 @@ sections:
             files:
               - path: AMG/Prensa_01/IHM/backup_proSave.md
                 title: 'Backup da Aplicação: Simatic ProSave'
+              - path: AMG/Prensa_01/IHM/backup_proSave02.md
+                title: 'Backup da Aplicação: Simatic ProSave02'
 
       - name: revisoes
         label: Revisões

@@ -1,180 +1,164 @@
-# diagnose-docs.ps1 - Diagnóstico do Volume de Documentação
-# Execute este script no servidor Windows via AnyDesk
+# diagnose-docs-simple.ps1 - Diagnóstico Simplificado
 
-Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "DIAGNÓSTICO - VOLUME DE DOCUMENTAÇÃO" -ForegroundColor Cyan
-Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "========================================"
+Write-Host "DIAGNOSTICO - VOLUME DE DOCUMENTACAO"
+Write-Host "========================================"
+Write-Host ""
 
 $docsPath = "C:\AMG-Infra\docs\procedures"
 
-# ========================================
-# 1. Verificar se pasta existe no host
-# ========================================
+# 1. Verificar pasta no host
 Write-Host "[1/6] Verificando pasta no servidor..." -ForegroundColor Yellow
 
 if (Test-Path $docsPath) {
-    Write-Host "  ✓ Pasta existe: $docsPath" -ForegroundColor Green
+    Write-Host "  OK - Pasta existe: $docsPath" -ForegroundColor Green
 
-    # Contar arquivos .md
-    $mdFiles = Get-ChildItem -Path $docsPath -Filter "*.md" -Recurse
-    Write-Host "  ✓ Arquivos .md encontrados: $($mdFiles.Count)" -ForegroundColor Green
+    $mdFiles = Get-ChildItem -Path $docsPath -Filter *.md -Recurse -ErrorAction SilentlyContinue
+    Write-Host "  OK - Arquivos .md encontrados: $($mdFiles.Count)" -ForegroundColor Green
 
     if ($mdFiles.Count -gt 0) {
-        Write-Host "`n  Primeiros 5 arquivos:" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "  Primeiros 5 arquivos:"
         $mdFiles | Select-Object -First 5 | ForEach-Object {
-            Write-Host "    - $($_.FullName)" -ForegroundColor Gray
+            Write-Host "    - $($_.Name)"
         }
     }
 } else {
-    Write-Host "  ✗ ERRO: Pasta não existe!" -ForegroundColor Red
-    Write-Host "  → Criar pasta: mkdir '$docsPath'" -ForegroundColor Yellow
+    Write-Host "  ERRO - Pasta nao existe!" -ForegroundColor Red
+    Write-Host "  ACAO: Criar com 'mkdir $docsPath'" -ForegroundColor Yellow
 }
 
-# ========================================
-# 2. Verificar containers rodando
-# ========================================
-Write-Host "`n[2/6] Verificando containers..." -ForegroundColor Yellow
+Write-Host ""
 
-$containers = docker ps --format "{{.Names}}" 2>$null
+# 2. Verificar containers
+Write-Host "[2/6] Verificando containers..." -ForegroundColor Yellow
+
+$containers = docker ps --format "table {{.Names}}" 2>$null | Select-Object -Skip 1
 
 if ($containers) {
-    Write-Host "  ✓ Containers rodando:" -ForegroundColor Green
+    Write-Host "  OK - Containers rodando:" -ForegroundColor Green
     $containers | ForEach-Object {
-        Write-Host "    - $_" -ForegroundColor Gray
+        Write-Host "    - $_"
     }
 
-    # Verificar se webapp está rodando
-    $webappRunning = $containers -match "webapp"
-    if ($webappRunning) {
-        Write-Host "  ✓ Webapp está rodando" -ForegroundColor Green
+    $webappName = $containers | Where-Object { $_ -match "webapp" }
+    if ($webappName) {
+        Write-Host "  OK - Container webapp encontrado: $webappName" -ForegroundColor Green
+        $script:webappContainer = $webappName
     } else {
-        Write-Host "  ✗ AVISO: Container 'webapp' não encontrado" -ForegroundColor Yellow
+        Write-Host "  AVISO - Container webapp nao encontrado" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  ✗ ERRO: Nenhum container rodando" -ForegroundColor Red
-    Write-Host "  → Iniciar: docker-compose up -d" -ForegroundColor Yellow
+    Write-Host "  ERRO - Nenhum container rodando" -ForegroundColor Red
+    Write-Host "  ACAO: Executar 'docker-compose up -d'" -ForegroundColor Yellow
 }
 
-# ========================================
-# 3. Verificar volume montado no container
-# ========================================
-Write-Host "`n[3/6] Verificando volume no container..." -ForegroundColor Yellow
+Write-Host ""
 
-$webappContainer = docker ps --filter "name=webapp" --format "{{.Names}}" 2>$null
+# 3. Verificar volume no container
+Write-Host "[3/6] Verificando volume no container..." -ForegroundColor Yellow
 
-if ($webappContainer) {
-    # Verificar se pasta existe dentro do container
-    $result = docker exec $webappContainer ls -la /app/docs/procedures 2>$null
+if ($script:webappContainer) {
+    $volumeCheck = docker exec $script:webappContainer ls /app/docs/procedures 2>&1
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "  ✓ Volume montado em /app/docs/procedures" -ForegroundColor Green
+        Write-Host "  OK - Volume montado em /app/docs/procedures" -ForegroundColor Green
 
-        # Contar arquivos .md dentro do container
-        $mdCount = docker exec $webappContainer find /app/docs/procedures -name "*.md" -type f 2>$null | Measure-Object -Line
-        Write-Host "  ✓ Arquivos .md no container: $($mdCount.Lines)" -ForegroundColor Green
+        $mdInContainer = docker exec $script:webappContainer sh -c "find /app/docs/procedures -name *.md -type f 2>/dev/null | wc -l"
+        Write-Host "  OK - Arquivos .md no container: $mdInContainer" -ForegroundColor Green
 
-        if ($mdCount.Lines -eq 0) {
-            Write-Host "  ✗ ERRO: Volume montado mas SEM arquivos!" -ForegroundColor Red
-            Write-Host "  → Verificar mapeamento em docker-compose.yml" -ForegroundColor Yellow
+        if ([int]$mdInContainer -eq 0) {
+            Write-Host "  ERRO - Volume montado mas SEM arquivos!" -ForegroundColor Red
+            Write-Host "  ACAO - Verificar mapeamento no docker-compose.yml" -ForegroundColor Yellow
         }
     } else {
-        Write-Host "  ✗ ERRO: Pasta /app/docs/procedures NÃO existe no container" -ForegroundColor Red
-        Write-Host "  → Volume não foi montado corretamente" -ForegroundColor Yellow
+        Write-Host "  ERRO - Pasta /app/docs/procedures NAO existe" -ForegroundColor Red
+        Write-Host "  ACAO - Volume nao foi montado" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "  ✗ AVISO: Container webapp não está rodando" -ForegroundColor Yellow
+    Write-Host "  AVISO - Container webapp nao esta rodando" -ForegroundColor Yellow
 }
 
-# ========================================
-# 4. Verificar variável de ambiente
-# ========================================
-Write-Host "`n[4/6] Verificando variável de ambiente..." -ForegroundColor Yellow
+Write-Host ""
 
-if ($webappContainer) {
-    $docsEnv = docker exec $webappContainer env 2>$null | Select-String "DOCS_PROCEDURES_PATH"
+# 4. Verificar variavel de ambiente
+Write-Host "[4/6] Verificando variavel de ambiente..." -ForegroundColor Yellow
+
+if ($script:webappContainer) {
+    $docsEnv = docker exec $script:webappContainer printenv DOCS_PROCEDURES_PATH 2>$null
 
     if ($docsEnv) {
-        Write-Host "  ✓ Variável configurada: $docsEnv" -ForegroundColor Green
+        Write-Host "  OK - DOCS_PROCEDURES_PATH=$docsEnv" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ ERRO: DOCS_PROCEDURES_PATH não está definida!" -ForegroundColor Red
-        Write-Host "  → Adicionar em docker-compose.yml:" -ForegroundColor Yellow
-        Write-Host "    environment:" -ForegroundColor Gray
-        Write-Host "      - DOCS_PROCEDURES_PATH=/app/docs/procedures" -ForegroundColor Gray
+        Write-Host "  ERRO - DOCS_PROCEDURES_PATH nao definida!" -ForegroundColor Red
+        Write-Host "  ACAO - Adicionar em docker-compose.yml" -ForegroundColor Yellow
     }
 }
 
-# ========================================
+Write-Host ""
+
 # 5. Verificar docker-compose.yml
-# ========================================
-Write-Host "`n[5/6] Verificando docker-compose.yml..." -ForegroundColor Yellow
+Write-Host "[5/6] Verificando docker-compose.yml..." -ForegroundColor Yellow
 
 $composeFile = "C:\AMG-Infra\docker-compose.yml"
 
 if (Test-Path $composeFile) {
-    $composeContent = Get-Content $composeFile -Raw
+    $content = Get-Content $composeFile -Raw
 
-    # Verificar se tem volume configurado
-    if ($composeContent -match "volumes:" -and $composeContent -match "docs/procedures") {
-        Write-Host "  ✓ Volume configurado em docker-compose.yml" -ForegroundColor Green
+    if ($content -match "volumes:" -and $content -match "docs/procedures") {
+        Write-Host "  OK - Volume configurado" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ ERRO: Volume NÃO configurado!" -ForegroundColor Red
-        Write-Host "  → Adicionar no serviço webapp:" -ForegroundColor Yellow
-        Write-Host "    volumes:" -ForegroundColor Gray
-        Write-Host "      - ./docs/procedures:/app/docs/procedures:ro" -ForegroundColor Gray
+        Write-Host "  ERRO - Volume NAO configurado!" -ForegroundColor Red
     }
 
-    # Verificar variável de ambiente
-    if ($composeContent -match "DOCS_PROCEDURES_PATH") {
-        Write-Host "  ✓ Variável DOCS_PROCEDURES_PATH configurada" -ForegroundColor Green
+    if ($content -match "DOCS_PROCEDURES_PATH") {
+        Write-Host "  OK - Variavel DOCS_PROCEDURES_PATH configurada" -ForegroundColor Green
     } else {
-        Write-Host "  ✗ ERRO: Variável DOCS_PROCEDURES_PATH NÃO configurada!" -ForegroundColor Red
+        Write-Host "  ERRO - Variavel NAO configurada!" -ForegroundColor Red
     }
 } else {
-    Write-Host "  ✗ ERRO: docker-compose.yml não encontrado em $composeFile" -ForegroundColor Red
+    Write-Host "  ERRO - docker-compose.yml nao encontrado" -ForegroundColor Red
 }
 
-# ========================================
-# 6. Verificar logs do webapp
-# ========================================
-Write-Host "`n[6/6] Verificando logs do webapp..." -ForegroundColor Yellow
+Write-Host ""
 
-if ($webappContainer) {
-    $logs = docker logs $webappContainer --tail 50 2>$null | Select-String -Pattern "docs|procedures|DOCS_PROCEDURES" -Context 0,1
+# 6. Verificar logs
+Write-Host "[6/6] Verificando logs do webapp..." -ForegroundColor Yellow
 
-    if ($logs) {
-        Write-Host "  ✓ Logs relacionados a docs:" -ForegroundColor Green
-        $logs | ForEach-Object {
-            Write-Host "    $_" -ForegroundColor Gray
+if ($script:webappContainer) {
+    $logsWithDocs = docker logs $script:webappContainer --tail 50 2>&1 | Select-String -Pattern "docs|procedures" -Quiet
+
+    if ($logsWithDocs) {
+        Write-Host "  OK - Mencoes a 'docs' encontradas nos logs" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  Logs relevantes:"
+        docker logs $script:webappContainer --tail 50 2>&1 | Select-String -Pattern "docs|procedures" | ForEach-Object {
+            Write-Host "    $_"
         }
     } else {
-        Write-Host "  ⚠ Nenhuma menção a 'docs' nos logs recentes" -ForegroundColor Yellow
-        Write-Host "`n  Últimas 10 linhas do log:" -ForegroundColor Gray
-        docker logs $webappContainer --tail 10 2>$null | ForEach-Object {
-            Write-Host "    $_" -ForegroundColor Gray
-        }
+        Write-Host "  AVISO - Nenhuma mencao a docs nos logs" -ForegroundColor Yellow
     }
 }
 
-# ========================================
-# RESUMO E RECOMENDAÇÕES
-# ========================================
-Write-Host "`n========================================" -ForegroundColor Cyan
-Write-Host "RESUMO E PRÓXIMOS PASSOS" -ForegroundColor Cyan
-Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "========================================"
+Write-Host "PROXIMOS PASSOS"
+Write-Host "========================================"
+Write-Host ""
 
-Write-Host "Se TODOS os checks acima estiverem OK mas ainda não aparecer:" -ForegroundColor Yellow
-Write-Host "  1. Reiniciar container:" -ForegroundColor White
-Write-Host "     docker-compose restart webapp`n" -ForegroundColor Gray
+Write-Host "Se tudo estiver OK mas nao aparecer:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  1. Reiniciar container:"
+Write-Host "     docker-compose restart webapp"
+Write-Host ""
+Write-Host "  2. Ver logs ao vivo:"
+Write-Host "     docker logs -f $script:webappContainer"
+Write-Host ""
+Write-Host "  3. Testar dentro do container:"
+Write-Host "     docker exec -it $script:webappContainer bash"
+Write-Host "     ls -la /app/docs/procedures/"
+Write-Host ""
 
-Write-Host "  2. Verificar se página de procedimentos existe:" -ForegroundColor White
-Write-Host "     Acessar: http://localhost:8050/maintenance/procedures`n" -ForegroundColor Gray
-
-Write-Host "  3. Ver logs completos:" -ForegroundColor White
-Write-Host "     docker logs -f <nome-container> | Select-String docs`n" -ForegroundColor Gray
-
-Write-Host "  4. Testar dentro do container:" -ForegroundColor White
-Write-Host "     docker exec -it <nome-container> bash" -ForegroundColor Gray
-Write-Host "     ls -la /app/docs/procedures/" -ForegroundColor Gray
-Write-Host "     cat /app/docs/procedures/index.md`n" -ForegroundColor Gray
-
-Write-Host "`nDiagnóstico concluído!`n" -ForegroundColor Green
+Write-Host "Diagnostico concluido!" -ForegroundColor Green
+Write-Host ""
