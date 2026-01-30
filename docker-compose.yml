@@ -19,7 +19,7 @@ services:
     networks:
       - easytek-net
 
-  vent-gateway:
+  event-gateway:
     image: ghcr.io/easytek-automation/easytek-data/event-gateway:${TAG:-latest}
     ports:
       - "5001:5001"
