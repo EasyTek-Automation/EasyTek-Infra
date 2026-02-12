@@ -7,6 +7,10 @@ services:
     environment:
       MONGO_URI: mongodb://database:27017
 
+  zpp-processor:
+    environment:
+      MONGO_URI: mongodb://database:27017
+
   node-red:
     ports:
       - "1880:1880"
