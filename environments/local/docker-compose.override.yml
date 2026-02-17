@@ -10,6 +10,11 @@ services:
   zpp-processor:
     environment:
       MONGO_URI: mongodb://database:27017
+    volumes:
+      # Substituir volumes CIFS por diretórios locais para desenvolvimento
+      - ./zpp-data/input:/data/input:rw
+      - ./zpp-data/output:/data/output:rw
+      - ./zpp-data/logs:/data/logs:rw
 
   node-red:
     ports:
@@ -46,4 +51,12 @@ services:
 volumes:
   mongo-data:
     name: mongo-data
+    driver: local
+
+  # Sobrescrever volumes CIFS com volumes locais para desenvolvimento
+  zpp-input:
+    driver: local
+  zpp-output:
+    driver: local
+  zpp-logs:
     driver: local
