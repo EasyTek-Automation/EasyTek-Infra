@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) { throw "Falha na autenticação com o ghcr.io." }
 $CodePath = "E:\Projetos Python\AMG_Data"
 
 # Lista de serviços a serem construídos
-$services = @("webapp", "event-gateway", "node-red")
+$services = @("webapp", "event-gateway", "zpp-processor", "node-red", "amg-mobile")
 
 # Loop para construir e enviar cada serviço
 foreach ($service in $services) {
