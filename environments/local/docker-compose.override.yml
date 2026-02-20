@@ -1,13 +1,19 @@
 services:
   webapp:
+    ports:
+      - "8050:8050"
     environment:
       MONGO_URI: mongodb://database:27017
 
   event-gateway:
+    ports:
+      - "5001:5001"
     environment:
       MONGO_URI: mongodb://database:27017
 
   zpp-processor:
+    ports:
+      - "5002:5002"
     environment:
       MONGO_URI: mongodb://database:27017
     volumes:
@@ -35,9 +41,13 @@ services:
     networks:
       - easytek-net
 
+  amg-mobile:
+    ports:
+      - "3001:3000"
+
   portainer:
     ports:
-    - "9443:9443"
+      - "9443:9443"
     image: portainer/portainer-ce:latest
     container_name: portainer
     command: -H unix:///var/run/docker.sock

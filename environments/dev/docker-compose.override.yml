@@ -1,7 +1,24 @@
 services:
+  webapp:
+    ports:
+      - "8051:8050"
+
+  event-gateway:
+    ports:
+      - "5011:5001"
+
+  zpp-processor:
+    ports:
+      - "5012:5002"
+
+  amg-mobile:
+    ports:
+      - "3011:3000"
+
   portainer:
+    ports:
+      - "9444:9443"
     image: portainer/portainer-ce:latest
-    container_name: portainer
     command: -H unix:///var/run/docker.sock
     restart: unless-stopped
     volumes:

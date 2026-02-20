@@ -1,12 +1,9 @@
-name: amg-infra
 services:
 
   webapp:
     # A diretiva 'build' foi removida.
     # A imagem agora aponta para o registro da sua organização.
     image: ghcr.io/easytek-automation/easytek-data/webapp:${TAG:-latest}
-    ports:
-      - "8050:8050"
     env_file:
       - .env.common
     environment:
@@ -21,8 +18,6 @@ services:
 
   event-gateway:
     image: ghcr.io/easytek-automation/easytek-data/event-gateway:${TAG:-latest}
-    ports:
-      - "5001:5001"
     env_file:
       - .env.common
     networks:
@@ -30,7 +25,6 @@ services:
 
   zpp-processor:
     image: ghcr.io/easytek-automation/easytek-data/zpp-processor:${TAG:-latest}
-    container_name: zpp-processor
     restart: unless-stopped
     env_file:
       - .env.common
@@ -46,8 +40,6 @@ services:
       - zpp-input:/data/input:rw
       - zpp-output:/data/output:rw
       - zpp-logs:/data/logs:rw
-    ports:
-      - "5002:5002"
     networks:
       - easytek-net
     healthcheck:
@@ -58,7 +50,6 @@ services:
       start_period: 40s
 
   node-red:
-    container_name: node-red
     image: ghcr.io/easytek-automation/easytek-data/node-red:${TAG:-latest}
     restart: unless-stopped
     user: root # <--- VERIFIQUE SE ESTA LINHA EXISTE
@@ -69,11 +60,8 @@ services:
       - easytek-net
 
   amg-mobile:
-    container_name: amg-mobile
     image: ghcr.io/easytek-automation/easytek-data/amg-mobile:${TAG:-latest}
     restart: unless-stopped
-    ports:
-      - "3001:3000"
     env_file:
       - .env.common
     environment:
