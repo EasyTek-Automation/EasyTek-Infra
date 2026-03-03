@@ -1,4 +1,4 @@
-# diagnose-docs-simple.ps1 - Diagnóstico Simplificado
+﻿# diagnose-docs-simple.ps1 - DiagnÃ³stico Simplificado
 
 Write-Host ""
 Write-Host "========================================"
@@ -6,7 +6,7 @@ Write-Host "DIAGNOSTICO - VOLUME DE DOCUMENTACAO"
 Write-Host "========================================"
 Write-Host ""
 
-$docsPath = "C:\AMG-Infra\docs\procedures"
+$docsPath = Join-Path (Split-Path -Parent $PSScriptRoot) "docs\procedures"
 
 # 1. Verificar pasta no host
 Write-Host "[1/6] Verificando pasta no servidor..." -ForegroundColor Yellow
@@ -101,7 +101,7 @@ Write-Host ""
 # 5. Verificar docker-compose.yml
 Write-Host "[5/6] Verificando docker-compose.yml..." -ForegroundColor Yellow
 
-$composeFile = "C:\AMG-Infra\docker-compose.yml"
+$composeFile = Join-Path (Split-Path -Parent $PSScriptRoot) "docker-compose.yml"
 
 if (Test-Path $composeFile) {
     $content = Get-Content $composeFile -Raw
@@ -162,3 +162,5 @@ Write-Host ""
 
 Write-Host "Diagnostico concluido!" -ForegroundColor Green
 Write-Host ""
+
+

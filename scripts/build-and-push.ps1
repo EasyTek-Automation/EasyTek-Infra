@@ -46,8 +46,9 @@ Write-Host "INFO: Autenticando no ghcr.io..."
 $env:GITHUB_PAT | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
 if ($LASTEXITCODE -ne 0) { throw "Falha na autenticação com o ghcr.io." }
 
-# Define o caminho RELATIVO para a pasta de código a partir da raiz de 'easytek-infra'
-$CodePath = "E:\Projetos Python\AMG_Data"
+# Define o caminho para a pasta de código (AMG_Data é irmã de AMG_Infra dentro de AMG/)
+$CodePath = Join-Path (Split-Path -Parent $PSScriptRoot) "..\AMG_Data"
+$CodePath = Resolve-Path $CodePath
 
 # Lista de serviços a serem construídos
 $services = @("webapp", "event-gateway", "zpp-processor", "node-red", "amg-mobile")

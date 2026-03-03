@@ -1,10 +1,15 @@
 # backup-mongo.ps1
 # Faz backup do MongoDB usando mongodump e mantém os últimos N dias
 param (
-    [string]$backupDir = "C:\AMG-Infra\Backups\MongoDB",
+    [string]$backupDir = "",
     [string]$container = "amg-infra-database-1",
     [int]$keepDays = 7
 )
+
+# Define o diretório de backup relativo à raiz do repositório se não informado
+if (-not $backupDir) {
+    $backupDir = Join-Path (Split-Path -Parent $PSScriptRoot) "Backups\MongoDB"
+}
 
 $ErrorActionPreference = 'Stop'
 
