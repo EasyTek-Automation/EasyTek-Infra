@@ -24,7 +24,7 @@ services:
       - "3001:3000"
 
   database:
-    image: mongo:latest
+    image: mongo:8.2
     ports:
       - "27017:27017"
     volumes:
@@ -33,7 +33,7 @@ services:
       - easytek-net
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.21.4
     container_name: portainer
     command: -H unix:///var/run/docker.sock
     restart: unless-stopped

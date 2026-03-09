@@ -18,7 +18,7 @@ services:
   portainer:
     ports:
       - "9444:9443"
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.21.4
     command: -H unix:///var/run/docker.sock
     restart: unless-stopped
     volumes:
