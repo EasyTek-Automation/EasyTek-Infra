@@ -15,7 +15,7 @@ services:
 
   zpp-processor:
     build:
-      context: ../../AMG_Data/zpp-processor
+      context: ../AMG_Data/zpp-processor
     ports:
       - "5002:5002"
     environment:
