@@ -14,6 +14,8 @@ services:
       MONGO_URI: mongodb://database:27017
 
   zpp-processor:
+    build:
+      context: ../../AMG_Data/zpp-processor
     ports:
       - "5002:5002"
     environment:
@@ -23,6 +25,7 @@ services:
       - ./zpp-data/input:/data/input:rw
       - ./zpp-data/output:/data/output:rw
       - ./zpp-data/logs:/data/logs:rw
+      - ./zpp-data/rejected:/data/rejected:rw
 
   node-red:
     ports:
@@ -36,6 +39,7 @@ services:
 
   database:
     image: mongo:8.2
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     volumes:

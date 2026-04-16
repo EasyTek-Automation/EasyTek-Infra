@@ -31,10 +31,11 @@ services:
     environment:
       - PORT=5002
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - AUTO_PROCESS=${ZPP_AUTO_PROCESS:-true}
-      - INTERVAL_MINUTES=${ZPP_INTERVAL_MINUTES:-60}
       - BATCH_SIZE=${ZPP_BATCH_SIZE:-1000}
       - BASE_DATA_DIR=/data
+      - SCHEDULER_INTERVAL_SECONDS=${ZPP_SCHEDULER_INTERVAL_SECONDS:-3600}
+      - MONTH_BOUNDARY_RULE=${ZPP_MONTH_BOUNDARY_RULE:-fim}
+      - WEBAPP_INTERNAL_URL=${WEBAPP_INTERNAL_URL:-http://webapp:8050}
     volumes:
       # Volumes de rede CIFS (\\sumare\Comum\manutencao\AMG EASYTEK DATA)
       - zpp-input:/data/input:rw
