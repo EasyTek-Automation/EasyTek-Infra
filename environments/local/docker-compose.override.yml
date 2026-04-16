@@ -1,5 +1,7 @@
 services:
   webapp:
+    build:
+      context: ../AMG_Data/webapp
     ports:
       - "8050:8050"
     environment:
