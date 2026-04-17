@@ -18,6 +18,8 @@ services:
       - "5002:5002"
     environment:
       MONGO_URI: mongodb://database:27017
+    volumes:
+      - zpp-rejected:/data/rejected:rw
 
   amg-mobile:
     ports:
@@ -25,6 +27,7 @@ services:
 
   database:
     image: mongo:8.2
+    command: mongod --replSet rs0 --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
@@ -47,3 +50,9 @@ volumes:
   mongo-data:
     name: mongo-data
     driver: local
+  zpp-rejected:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: //sumare/Comum/manutencao/AMG EASYTEK DATA/rejected
+      o: username=${ZPP_NETWORK_USER},password=${ZPP_NETWORK_PASSWORD},uid=1000,gid=1000,file_mode=0777,dir_mode=0777
