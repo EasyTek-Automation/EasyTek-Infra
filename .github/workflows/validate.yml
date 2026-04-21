@@ -1,0 +1,33 @@
+name: Validate Compose
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validar arquivos Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar docker-compose.yml
+        run: docker compose -f docker-compose.yml config --quiet
+        env:
+          TAG: latest
+          ZPP_NETWORK_USER: ci
+          ZPP_NETWORK_PASSWORD: ci
+          LOG_LEVEL: INFO
+          ZPP_AUTO_PROCESS: "false"
+          ZPP_INTERVAL_MINUTES: "60"
+          ZPP_BATCH_SIZE: "1000"
+
+      - name: Validar proxy-compose.yml
+        run: docker compose -f proxy-compose.yml config --quiet
+        env:
+          NGINX_DATA_PATH: /tmp/nginx/data
+          NGINX_LETSENCRYPT_PATH: /tmp/nginx/letsencrypt

@@ -25,3 +25,14 @@ Docker-Data/
 # volumes do docker
 **/node_modules
 **/__pycache__
+
+# Override local de desenvolvimento — referencia imagem local amg-webapp-local
+# que só existe na máquina do dev. NUNCA deve ir para o remoto.
+docker-compose.override.yml
+
+# Runtime do ZPP Processor (dados e logs gerados em execução)
+logs/
+zpp-data/
+
+# Configuração local do Claude Code
+settings.local.json
