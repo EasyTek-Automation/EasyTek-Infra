@@ -35,6 +35,48 @@ services:
     networks:
       - easytek-net
 
+  mongo-init:
+    image: mongo:8.2
+    depends_on:
+      - database
+    restart: "no"
+    networks:
+      - easytek-net
+    entrypoint:
+      - bash
+      - -c
+      - |
+        echo "[mongo-init] Aguardando MongoDB responder..."
+        for i in $(seq 1 30); do
+          if mongosh --host database:27017 --quiet --eval 'db.runCommand({ping:1}).ok' 2>/dev/null | grep -q '^1$'; then
+            echo "[mongo-init] MongoDB respondeu"; break
+          fi
+          sleep 2
+        done
+        mongosh --host database:27017 --quiet --eval '
+          try {
+            var cfg = rs.conf();
+            var needFix = cfg.members.length !== 1 || cfg.members[0].host !== "database:27017";
+            if (needFix) {
+              print("[mongo-init] Reconfigurando host para database:27017...");
+              cfg.members = [{_id: 0, host: "database:27017"}];
+              cfg.version = cfg.version + 1;
+              db.adminCommand({replSetReconfig: cfg, force: true});
+              print("[mongo-init] Reconfig concluído");
+            } else {
+              print("[mongo-init] Replica set OK (host correto)");
+            }
+          } catch (e) {
+            if (e.codeName === "NotYetInitialized") {
+              print("[mongo-init] Inicializando rs0...");
+              rs.initiate({_id: "rs0", members: [{_id: 0, host: "database:27017"}]});
+              print("[mongo-init] Inicialização concluída");
+            } else {
+              print("[mongo-init] Erro inesperado: " + e.message);
+              quit(1);
+            }
+          }'
+
   portainer:
     image: portainer/portainer-ce:2.21.4
     container_name: portainer
