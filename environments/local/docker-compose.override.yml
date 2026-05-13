@@ -8,6 +8,8 @@ services:
       MONGO_URI: mongodb://database:27017
     volumes:
       - ./logs:/app/logs
+      - ../AMG_Data/webapp/src:/app/src:ro   # KPIReport dev — hot reload do código Python; afeta apenas ambiente local (env=local)
+      - ../AMG_Data/webapp/tests:/app/tests:ro   # KPIReport dev — hot reload da suite de testes (IM-06)
 
   event-gateway:
     ports:

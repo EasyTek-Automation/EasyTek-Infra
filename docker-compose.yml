@@ -8,10 +8,15 @@ services:
       - DOCS_PROCEDURES_PATH=/app/docs/procedures
       - ZPP_INTERNAL_SECRET=${ZPP_INTERNAL_SECRET}
       - ZPP_PROCESSOR_URL=${ZPP_PROCESSOR_URL:-http://zpp-processor:5002}
+      # KPIReport (RV-06)
+      - TZ=${TZ:-America/Sao_Paulo}
+      - KPI_REPORT_TEMPLATE_PATH=${KPI_REPORT_TEMPLATE_PATH:-}
     volumes:
       # Volume externo para documentação (editável sem rebuild)
       # Host: ./docs/procedures -> Container: /app/docs/procedures
       - ./docs/procedures:/app/docs/procedures:ro
+      # KPIReport — volume opcional para override do template DOCX sem rebuild (SP-06 D6 / RV-06)
+      - ${KPI_REPORT_TEMPLATE_HOST_PATH:-./docs/kpi-templates}:/opt/amg-data/templates:ro
     networks:
       - easytek-net
 
