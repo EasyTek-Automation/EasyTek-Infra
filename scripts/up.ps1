@@ -4,7 +4,10 @@ param (
     [ValidateSet('local', 'dev', 'prod')]
     [Alias('env')]
     [string]$environment,
-    [string]$tag = "latest"
+    [string]$tag = "latest",
+    # Pula o deploy do daemon nativo sap-scheduler (só containers). Útil em local
+    # ou quando o daemon não deve ser tocado.
+    [switch]$SkipDaemon
 )
 
 # --- Validação ---
@@ -71,6 +74,21 @@ try {
     }
 
     if ($LASTEXITCODE -ne 0) { throw "Falha ao iniciar o docker-compose principal." }
+
+    # Passo 3: Deploy do daemon nativo sap-scheduler (não containeriza — SAP GUI).
+    # Só em dev/prod (no servidor) e com tag explícita. Falha aqui NÃO derruba os
+    # containers já no ar — o daemon é independente; reporta e segue.
+    if ($environment -ne 'local' -and -not $SkipDaemon -and $tag -ne 'latest') {
+        Write-Host "INFO: Atualizando o daemon sap-scheduler para a tag '$tag'..."
+        try {
+            & (Join-Path $PSScriptRoot 'deploy-daemon.ps1') -tag $tag
+        } catch {
+            Write-Warning "Containers no ar, mas o deploy do daemon sap-scheduler falhou: $_"
+            Write-Warning "Rode manualmente: .\scripts\deploy-daemon.ps1 -tag $tag"
+        }
+    } elseif ($environment -ne 'local' -and $tag -eq 'latest') {
+        Write-Warning "Daemon sap-scheduler não atualizado: informe uma tag explícita (ex: .\up.ps1 prod 20260615.1430)."
+    }
 
     Write-Host "SUCESSO: Ambiente '$environment' iniciado com a tag '$tag'."
 
