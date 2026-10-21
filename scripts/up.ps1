@@ -41,7 +41,7 @@ if ($environment -ne 'local' -and (-not $env:GITHUB_USER -or -not $env:GITHUB_PA
 $env:TAG = $tag
 
 # Nome do projeto Docker Compose: dev usa nome separado para coexistir com prod
-$projectName = if ($environment -eq 'dev') { 'amg-infra-dev' } else { 'amg-infra' }
+$projectName = if ($environment -eq 'dev') { 'easytek-infra-dev' } else { 'easytek-infra' }
 
 # --- Execução ---
 try {
@@ -49,7 +49,7 @@ try {
     # Dev usa o env do prod para o proxy, já que o nginx é gerenciado pelo prod
     $proxyEnvFile = if ($environment -eq 'dev') { ".\environments\prod\.env" } else { $envFile }
     Write-Host "INFO: Iniciando a infraestrutura de proxy para o ambiente '$environment'..."
-    docker compose --project-name amg-infra --env-file $proxyEnvFile -f "proxy-compose.yml" up -d --wait
+    docker compose --project-name easytek-infra --env-file $proxyEnvFile -f "proxy-compose.yml" up -d --wait
     if ($LASTEXITCODE -ne 0) { throw "Falha ao iniciar o proxy-compose." }
 
     # Passo 2: Lógica diferente para local vs. remoto

@@ -1,4 +1,4 @@
-# deploy-daemon.ps1 — atualiza o daemon sap-scheduler no servidor (Windows nativo).
+﻿# deploy-daemon.ps1 — atualiza o daemon sap-scheduler no servidor (Windows nativo).
 #
 # O daemon NÃO containeriza (SAP GUI, Python 32-bit). Em vez de imagem, ele é
 # baixado como artefato .zip do GitHub Release (mesma tag das imagens) e roda
@@ -20,7 +20,7 @@ param (
     [string]$DestDir = (Join-Path $env:USERPROFILE 'sap-scheduler'),
 
     # Repo que hospeda o Release (origin de deploy do AMG_Data).
-    [string]$Repo = $(if ($env:DAEMON_RELEASE_REPO) { $env:DAEMON_RELEASE_REPO } else { 'EasyTek-Automation/AMG-Data' }),
+    [string]$Repo = $(if ($env:DAEMON_RELEASE_REPO) { $env:DAEMON_RELEASE_REPO } else { 'EasyTek-Automation/EasyTek-Data' }),
 
     # Nome da tarefa agendada do Windows.
     [string]$TaskName = 'SAP Job Scheduler'

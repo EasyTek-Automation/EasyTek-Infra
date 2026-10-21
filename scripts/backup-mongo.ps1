@@ -2,7 +2,7 @@
 # Faz backup do MongoDB usando mongodump e mantém os últimos N dias
 param (
     [string]$backupDir = "",
-    [string]$container = "amg-infra-database-1",
+    [string]$container = "easytek-infra-database-1",
     [int]$keepDays = 7
 )
 

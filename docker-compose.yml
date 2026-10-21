@@ -1,7 +1,8 @@
 services:
 
   webapp:
-    image: ghcr.io/easytek-automation/easytek-data/webapp:${TAG:-latest}
+    image: ghcr.io/easytek-automation/easytek-base/webapp:${TAG:-latest}
+    restart: unless-stopped
     env_file:
       - .env.common
     environment:
@@ -11,24 +12,30 @@ services:
       # KPIReport (RV-06)
       - TZ=${TZ:-America/Sao_Paulo}
       - KPI_REPORT_TEMPLATE_PATH=${KPI_REPORT_TEMPLATE_PATH:-}
+      # Fotos da Análise de Falhas — raiz no file server CIFS (montado abaixo).
+      - FAILURE_PHOTOS_ROOT=/data/failure-photos
     volumes:
       # Volume externo para documentação (editável sem rebuild)
       # Host: ./docs/procedures -> Container: /app/docs/procedures
       - ./docs/procedures:/app/docs/procedures:ro
       # KPIReport — volume opcional para override do template DOCX sem rebuild (SP-06 D6 / RV-06)
       - ${KPI_REPORT_TEMPLATE_HOST_PATH:-./docs/kpi-templates}:/opt/amg-data/templates:ro
+      # Fotos da Análise de Falhas — file server CIFS (\\file-server\photos).
+      # No local, o override troca este volume por um volume local (sem CIFS).
+      - failure-photos:/data/failure-photos:rw
     networks:
       - easytek-net
 
   event-gateway:
-    image: ghcr.io/easytek-automation/easytek-data/event-gateway:${TAG:-latest}
+    image: ghcr.io/easytek-automation/easytek-base/event-gateway:${TAG:-latest}
+    restart: unless-stopped
     env_file:
       - .env.common
     networks:
       - easytek-net
 
   zpp-processor:
-    image: ghcr.io/easytek-automation/easytek-data/zpp-processor:${TAG:-latest}
+    image: ghcr.io/easytek-automation/easytek-base/zpp-processor:${TAG:-latest}
     restart: unless-stopped
     env_file:
       - .env.common
@@ -42,7 +49,7 @@ services:
       - WEBAPP_INTERNAL_URL=${WEBAPP_INTERNAL_URL:-http://webapp:8050}
       - ZPP_INTERNAL_SECRET=${ZPP_INTERNAL_SECRET}
     volumes:
-      # Volumes de rede CIFS (\\sumare\Comum\manutencao\AMG EASYTEK DATA)
+      # Volumes de rede CIFS (\\file-server\sap)
       - zpp-input:/data/input:rw
       - zpp-output:/data/output:rw
       - zpp-logs:/data/logs:rw
@@ -56,7 +63,7 @@ services:
       start_period: 40s
 
   node-red:
-    image: ghcr.io/easytek-automation/easytek-data/node-red:${TAG:-latest}
+    image: ghcr.io/easytek-automation/easytek-base/node-red:${TAG:-latest}
     restart: unless-stopped
     user: root # <--- VERIFIQUE SE ESTA LINHA EXISTE
     volumes:
@@ -66,7 +73,7 @@ services:
       - easytek-net
 
   amg-mobile:
-    image: ghcr.io/easytek-automation/easytek-data/amg-mobile:${TAG:-latest}
+    image: ghcr.io/easytek-automation/easytek-base/amg-mobile:${TAG:-latest}
     restart: unless-stopped
     env_file:
       - .env.common
@@ -93,21 +100,30 @@ volumes:
     driver: local
     driver_opts:
       type: cifs
-      device: //sumare/Comum/manutencao/AMG EASYTEK DATA/input
+      device: ${ZPP_INPUT_SHARE:-//file-server/sap}/input
       o: username=${ZPP_NETWORK_USER},password=${ZPP_NETWORK_PASSWORD},uid=1000,gid=1000,file_mode=0777,dir_mode=0777
 
   zpp-output:
     driver: local
     driver_opts:
       type: cifs
-      device: //sumare/Comum/manutencao/AMG EASYTEK DATA/output
+      device: ${ZPP_INPUT_SHARE:-//file-server/sap}/output
       o: username=${ZPP_NETWORK_USER},password=${ZPP_NETWORK_PASSWORD},uid=1000,gid=1000,file_mode=0777,dir_mode=0777
 
   zpp-logs:
     driver: local
     driver_opts:
       type: cifs
-      device: //sumare/Comum/manutencao/AMG EASYTEK DATA/logs
+      device: ${ZPP_LOGS_SHARE:-//file-server/sap/logs}
+      o: username=${ZPP_NETWORK_USER},password=${ZPP_NETWORK_PASSWORD},uid=1000,gid=1000,file_mode=0777,dir_mode=0777
+
+  # Fotos da Análise de Falhas (CIFS/SMB) — mesmo servidor/creds do ZPP.
+  # \\file-server\photos
+  failure-photos:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: ${FAILURE_PHOTOS_SHARE:-//file-server/photos}
       o: username=${ZPP_NETWORK_USER},password=${ZPP_NETWORK_PASSWORD},uid=1000,gid=1000,file_mode=0777,dir_mode=0777
 
   # Volumes existentes

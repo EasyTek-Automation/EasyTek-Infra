@@ -1,15 +1,17 @@
 services:
   webapp:
     build:
-      context: ../AMG_Data/webapp
+      context: ../EasyTek_Data/webapp
     ports:
       - "8050:8050"
     environment:
       MONGO_URI: mongodb://database:27017
     volumes:
       - ./logs:/app/logs
-      - ../AMG_Data/webapp/src:/app/src:ro   # KPIReport dev — hot reload do código Python; afeta apenas ambiente local (env=local)
-      - ../AMG_Data/webapp/tests:/app/tests:ro   # KPIReport dev — hot reload da suite de testes (IM-06)
+      - ../EasyTek_Data/webapp/src:/app/src:ro   # KPIReport dev — hot reload do código Python; afeta apenas ambiente local (env=local)
+      - ../EasyTek_Data/webapp/tests:/app/tests:ro   # KPIReport dev — hot reload da suite de testes (IM-06)
+      # Fotos: no dev, bind local em vez do CIFS \\file-server (substitui por target).
+      - ./failure-photos-data:/data/failure-photos:rw
 
   event-gateway:
     ports:
@@ -19,7 +21,7 @@ services:
 
   zpp-processor:
     build:
-      context: ../AMG_Data/zpp-processor
+      context: ../EasyTek_Data/zpp-processor
     ports:
       - "5002:5002"
     environment:
@@ -121,4 +123,7 @@ volumes:
   zpp-output:
     driver: local
   zpp-logs:
+    driver: local
+  # Fotos da Análise de Falhas: no dev, volume local (sem CIFS \\file-server).
+  failure-photos:
     driver: local

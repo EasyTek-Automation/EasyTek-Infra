@@ -47,7 +47,7 @@ $env:GITHUB_PAT | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
 if ($LASTEXITCODE -ne 0) { throw "Falha na autenticação com o ghcr.io." }
 
 # Define o caminho para a pasta de código (AMG_Data é irmã de AMG_Infra dentro de AMG/)
-$CodePath = Join-Path (Split-Path -Parent $PSScriptRoot) "..\AMG_Data"
+$CodePath = Join-Path (Split-Path -Parent $PSScriptRoot) "..\EasyTek_Data"
 $CodePath = Resolve-Path $CodePath
 
 # Lista de serviços a serem construídos
@@ -55,7 +55,7 @@ $services = @("webapp", "event-gateway", "zpp-processor", "node-red", "amg-mobil
 
 # Loop para construir e enviar cada serviço
 foreach ($service in $services) {
-    $imageName = "ghcr.io/easytek-automation/easytek-data/$service`:$tag"
+    $imageName = "ghcr.io/easytek-automation/easytek-base/$service`:$tag"
     
     # Caminho para a pasta do serviço (o contexto do build)
     $contextPath = Join-Path $CodePath $service

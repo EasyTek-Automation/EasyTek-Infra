@@ -23,7 +23,7 @@ if (-not (Test-Path $envFile)) {
 $env:TAG = $tag
 
 # Nome do projeto Docker Compose (deve bater com o usado no up.ps1)
-$projectName = if ($environment -eq 'dev') { 'amg-infra-dev' } else { 'amg-infra' }
+$projectName = if ($environment -eq 'dev') { 'easytek-infra-dev' } else { 'easytek-infra' }
 
 Write-Host "INFO: Parando o ambiente '$environment' de forma controlada..."
 
@@ -47,7 +47,7 @@ try {
     # Passo 2: Derrubar o proxy — dev não derruba o proxy (é compartilhado com prod)
     if ($environment -ne 'dev' -and (Test-Path "proxy-compose.yml")) {
         $proxyEnvFile = $envFile
-        docker compose --project-name amg-infra --env-file $proxyEnvFile -f "proxy-compose.yml" down --remove-orphans
+        docker compose --project-name easytek-infra --env-file $proxyEnvFile -f "proxy-compose.yml" down --remove-orphans
     } elseif ($environment -eq 'dev') {
         Write-Host "INFO: Proxy mantido (compartilhado com prod)."
     }
